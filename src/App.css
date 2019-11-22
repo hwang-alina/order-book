@@ -1,0 +1,23 @@
+.App{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tables {
+  width: 100%;
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+.table {
+  width: 45%;
+}
+
+td {
+  width: 25%;
+  text-align: right;
+}
