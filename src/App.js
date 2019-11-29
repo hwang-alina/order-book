@@ -26,7 +26,6 @@ export class App extends React.Component {
   }
 
   componentDidMount() {
-    window.addEventListener("click", event => {});
     let socket = new WebSocket(
       "wss://stream.binance.com/stream?streams=btcusdt@depth@100ms"
     );
