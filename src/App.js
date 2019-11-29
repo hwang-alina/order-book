@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { Spin, Table } from "antd";
+import { Spin, Table, message } from "antd";
 import axios from "axios";
 import { parseData, updateArrAsc, updateArrDesc } from "./utils";
 
@@ -11,6 +11,7 @@ export class App extends React.Component {
       ws: null,
       tableData: {},
       isFetching: false,
+      error: null,
       data: null,
       messagesBuffer: [],
       firstProceedMsg: null
@@ -18,12 +19,14 @@ export class App extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState, nextContext) {
-    return this.state.tableData !== nextState.tableData;
+    return (
+      this.state.tableData !== nextState.tableData ||
+      this.state.error !== nextState.error
+    );
   }
 
   componentDidMount() {
-    window.addEventListener("click", (event) => {
-    });
+    window.addEventListener("click", event => {});
     let socket = new WebSocket(
       "wss://stream.binance.com/stream?streams=btcusdt@depth@100ms"
     );
@@ -67,8 +70,7 @@ export class App extends React.Component {
             buff.forEach(m => this.updateTable(m));
           }
         });
-      }
-      else if (
+      } else if (
         isDataFetched &&
         message.data.U <= this.state.data.lastUpdateId + 1 &&
         message.data.u >= this.state.data.lastUpdateId + 1
@@ -89,13 +91,13 @@ export class App extends React.Component {
       console.log("connection closed");
     };
 
-    socket.onerror = err => {
+    socket.onerror = error => {
       console.error(
         "Socket encountered error: ",
-        err.message,
+        error.message,
         "Closing socket"
       );
-
+      message.error("Closing socket");
       socket.close();
     };
   }
@@ -147,12 +149,13 @@ export class App extends React.Component {
           tableData: {
             asks: parseData(res.data.asks.slice(0, 15)),
             bids: parseData(res.data.bids.slice(0, 15))
-          }
+          },
+          isFetching: false
         });
       })
-      .then(() => this.setState({ isFetching: false }))
-      .catch(err => {
-        console.error(err);
+      .catch(error => {
+        console.error(error);
+        this.setState({ error });
         this.state.ws.close();
         return null;
       });
@@ -193,8 +196,12 @@ export class App extends React.Component {
 
     return (
       <div className="App">
-        {(this.state.data === null) ? (
-          <Spin tip="Loading..." size="large" />
+        {this.state.data === null ? (
+          this.state.error ? (
+            <div className="error">Error: {this.state.error.message}</div>
+          ) : (
+            <Spin tip="Loading..." size="large" />
+          )
         ) : (
           <div className="tables">
             <Table
